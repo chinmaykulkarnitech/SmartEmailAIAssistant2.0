@@ -189,16 +189,18 @@ async function generateReply(button, instruction = '') {
             throw new Error('Please configure your Gemini API key in the extension settings.');
         }
 
-        const response = await fetch('http://localhost:8080/api/email/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                emailContent,
-                tone: selectedTone,
-                customInstruction: instruction,
-                apiKey
-            })
-        });
+        const response = await fetch('http://localhost:9090/api/email/generate', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        emailContent,
+        tone: selectedTone,
+        customInstruction: instruction,
+        apiKey
+    })
+});
 
         const responseText = await response.text();
         if (!response.ok) {

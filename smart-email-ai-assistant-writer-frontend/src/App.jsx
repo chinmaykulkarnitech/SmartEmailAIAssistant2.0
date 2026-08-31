@@ -56,44 +56,40 @@ function App() {
           ? response.data
           : JSON.stringify(response.data)
       );
-
-    
     } catch (err) {
-  console.error("Generate reply error:", err);
+      console.error("Generate reply error:", err);
 
-  const status = err?.response?.status;
-  const serverMessage = err?.response?.data;
+      const status = err?.response?.status;
+      const serverMessage = err?.response?.data;
 
-  if (status === 503) {
-    setError(
-      "Gemini is temporarily unavailable. Please try again in a few seconds."
-    );
-  } else if (status === 401 || status === 403) {
-    setError(
-      "The Gemini API key is invalid or unauthorized."
-    );
-  } else if (status === 429) {
-    setError(
-      "Gemini API rate limit reached. Please try again later."
-    );
-  } else if (status === 500) {
-    setError(
-      "Backend error. The request reached the server, but the server encountered an internal error."
-    );
-  } else if (serverMessage) {
-    setError(String(serverMessage));
-  } else {
-    setError(
-      "Request failed. Please check the backend."
-    );
-  }
-} finally {
-  setLoading(false);
-}
+      if (status === 503) {
+        setError(
+          "Gemini is temporarily unavailable. Please try again in a few seconds."
+        );
+      } else if (status === 401 || status === 403) {
+        setError(
+          "The Gemini API key is invalid or unauthorized."
+        );
+      } else if (status === 429) {
+        setError(
+          "Gemini API rate limit reached. Please try again later."
+        );
+      } else if (status === 500) {
+        setError(
+          "Backend error. The request reached the server, but the server encountered an internal error."
+        );
+      } else if (serverMessage) {
+        setError(String(serverMessage));
+      } else {
+        setError("Request failed. Please check the backend.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-
       <Typography
         variant="h3"
         fontWeight="bold"
@@ -104,8 +100,6 @@ function App() {
       </Typography>
 
       <Box sx={{ mt: 3 }}>
-
-        {/* Gemini API Key */}
         <TextField
           fullWidth
           type="password"
@@ -116,7 +110,6 @@ function App() {
           sx={{ mb: 2 }}
         />
 
-        {/* Original Email */}
         <TextField
           fullWidth
           multiline
@@ -129,7 +122,6 @@ function App() {
           sx={{ mb: 2 }}
         />
 
-        {/* Tone */}
         <FormControl fullWidth>
           <InputLabel>Email Tone</InputLabel>
 
@@ -138,45 +130,18 @@ function App() {
             label="Email Tone"
             onChange={(e) => setTone(e.target.value)}
           >
-            <MenuItem value="professional">
-              Professional
-            </MenuItem>
-
-            <MenuItem value="friendly">
-              Friendly
-            </MenuItem>
-
-            <MenuItem value="formal">
-              Formal
-            </MenuItem>
-
-            <MenuItem value="polite">
-              Polite
-            </MenuItem>
-
-            <MenuItem value="confident">
-              Confident
-            </MenuItem>
-
-            <MenuItem value="apologetic">
-              Apologetic
-            </MenuItem>
-
-            <MenuItem value="appreciative">
-              Appreciative
-            </MenuItem>
-
-            <MenuItem value="empathetic">
-              Empathetic
-            </MenuItem>
-
-            <MenuItem value="concise">
-              Concise
-            </MenuItem>
+            <MenuItem value="professional">Professional</MenuItem>
+            <MenuItem value="friendly">Friendly</MenuItem>
+            <MenuItem value="formal">Formal</MenuItem>
+            <MenuItem value="polite">Polite</MenuItem>
+            <MenuItem value="confident">Confident</MenuItem>
+            <MenuItem value="apologetic">Apologetic</MenuItem>
+            <MenuItem value="appreciative">Appreciative</MenuItem>
+            <MenuItem value="empathetic">Empathetic</MenuItem>
+            <MenuItem value="concise">Concise</MenuItem>
           </Select>
         </FormControl>
 
-        {/* Generate Button */}
         <Button
           variant="contained"
           sx={{ mt: 2 }}
@@ -188,30 +153,20 @@ function App() {
           }
         >
           {loading ? (
-            <CircularProgress
-              size={24}
-              color="inherit"
-            />
+            <CircularProgress size={24} color="inherit" />
           ) : (
             "Generate Reply"
           )}
         </Button>
 
-        {/* Error */}
         {error && (
-          <Typography
-            color="error"
-            sx={{ mt: 2 }}
-          >
+          <Typography color="error" sx={{ mt: 2 }}>
             {error}
           </Typography>
         )}
-
       </Box>
 
-      {/* Generated Reply */}
       <Box sx={{ mt: 3 }}>
-
         <TextField
           fullWidth
           multiline
@@ -236,13 +191,9 @@ function App() {
         >
           Copy AI Generated Reply
         </Button>
-
       </Box>
-
     </Container>
   );
-}
-
 }
 
 export default App;

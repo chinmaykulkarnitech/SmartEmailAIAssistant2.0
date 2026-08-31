@@ -1,0 +1,11 @@
+body {
+  margin: 0;
+}
+
+.email-app {
+  min-height: 100vh;
+}
+
+.generated-reply {
+  white-space: pre-wrap;
+}
