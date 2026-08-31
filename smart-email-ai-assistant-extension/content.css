@@ -1,0 +1,484 @@
+/* =========================================
+   AI REPLY BUTTON
+========================================= */
+
+.ai-reply-button {
+    --border-radius: 16px;
+    --border-width: 2px;
+
+    appearance: none;
+    position: relative;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    min-width: 112px !important;
+    height: 34px !important;
+
+    padding: 0 14px !important;
+    margin-right: 8px !important;
+
+    border: 0 !important;
+    border-radius: var(--border-radius) !important;
+
+    background: #212121 !important;
+    color: #ffffff !important;
+
+    font-family:
+        "Roboto",
+        Arial,
+        "Segoe UI",
+        sans-serif !important;
+
+    font-size: 13px !important;
+    font-weight: 600 !important;
+
+    cursor: pointer !important;
+
+    z-index: 2;
+
+    box-sizing: border-box !important;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease !important;
+}
+
+
+/* =========================================
+   ANIMATED BORDER
+========================================= */
+
+.ai-reply-button::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 100%;
+
+    padding: var(--border-width);
+
+    border-radius: var(--border-radius);
+
+    background-image: conic-gradient(
+        #488cfb,
+        #29dbbc,
+        #ddf505,
+        #ff9f0e,
+        #e440bb,
+        #655adc,
+        #488cfb
+    );
+
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+
+    pointer-events: none;
+
+    box-sizing: border-box;
+
+    filter: hue-rotate(0deg);
+
+    animation:
+        rotate-hue 2s linear infinite;
+
+    animation-play-state: paused;
+}
+
+
+/* =========================================
+   BUTTON HOVER
+========================================= */
+
+.ai-reply-button:hover {
+    transform: translateY(-1px) !important;
+}
+
+.ai-reply-button:hover::after {
+    animation-play-state: running;
+}
+
+
+/* =========================================
+   GENERATING
+========================================= */
+
+.ai-reply-button.generating {
+    opacity: 0.65 !important;
+
+    cursor: wait !important;
+
+    transform: none !important;
+}
+
+
+/* =========================================
+   BUTTON ACTIVE
+========================================= */
+
+.ai-reply-button:active {
+    transform: translateY(0) !important;
+}
+
+
+/* =========================================
+   ANIMATION
+========================================= */
+
+@keyframes rotate-hue {
+
+    to {
+        filter: hue-rotate(1turn);
+    }
+
+}
+
+
+/* =========================================
+   AI REPLY SETTINGS MENU
+========================================= */
+
+.ai-tone-menu {
+
+    position: absolute !important;
+
+    z-index: 999999 !important;
+
+    /*
+       Compact width.
+       Never exceed Gmail/browser viewport.
+    */
+
+    width: min(330px, calc(100vw - 20px)) !important;
+
+    padding: 12px !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #dadce0 !important;
+
+    border-radius: 12px !important;
+
+    box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.18) !important;
+
+    font-family:
+        "Roboto",
+        Arial,
+        "Segoe UI",
+        sans-serif !important;
+
+    box-sizing: border-box !important;
+
+    overflow: hidden !important;
+}
+
+
+/* =========================================
+   MENU TITLE
+========================================= */
+
+.ai-tone-title {
+
+    padding:
+        2px
+        2px
+        9px
+        2px !important;
+
+    font-size: 13px !important;
+
+    font-weight: 600 !important;
+
+    color: #202124 !important;
+}
+
+
+/* =========================================
+   TONE OPTIONS
+========================================= */
+
+.ai-tone-options {
+
+    display: flex !important;
+
+    flex-wrap: wrap !important;
+
+    gap: 5px !important;
+
+    width: 100% !important;
+
+    margin-bottom: 10px !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================
+   TONE BUTTON
+========================================= */
+
+.ai-tone-option {
+
+    flex: 1 1 auto !important;
+
+    width: auto !important;
+
+    min-width: 55px !important;
+
+    height: 29px !important;
+
+    padding:
+        0 8px !important;
+
+    border:
+        1px solid #dadce0 !important;
+
+    border-radius: 7px !important;
+
+    background: #ffffff !important;
+
+    color: #3c4043 !important;
+
+    text-align: center !important;
+
+    font-size: 11px !important;
+
+    font-weight: 500 !important;
+
+    cursor: pointer !important;
+
+    white-space: nowrap !important;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================
+   TONE HOVER
+========================================= */
+
+.ai-tone-option:hover {
+
+    background: #f5f3ff !important;
+
+    border-color: #7c3aed !important;
+
+    color: #6d28d9 !important;
+}
+
+
+/* =========================================
+   SELECTED TONE
+========================================= */
+
+.ai-tone-option.selected {
+
+    background: #ede9fe !important;
+
+    border-color: #7c3aed !important;
+
+    color: #6d28d9 !important;
+
+    font-weight: 600 !important;
+}
+
+
+/* =========================================
+   INPUT LABEL
+========================================= */
+
+.ai-input-label {
+
+    margin:
+        5px
+        2px
+        5px
+        2px !important;
+
+    font-size: 11px !important;
+
+    font-weight: 600 !important;
+
+    color: #5f6368 !important;
+}
+
+
+/* =========================================
+   CUSTOM INSTRUCTION
+========================================= */
+
+.ai-instruction-input {
+
+    display: block !important;
+
+    width: 100% !important;
+
+    min-height: 55px !important;
+
+    max-height: 80px !important;
+
+    padding:
+        8px
+        9px !important;
+
+    margin:
+        0
+        0
+        9px
+        0 !important;
+
+    border:
+        1px
+        solid
+        #dadce0 !important;
+
+    border-radius: 7px !important;
+
+    background: #ffffff !important;
+
+    color: #202124 !important;
+
+    font-family:
+        Arial,
+        sans-serif !important;
+
+    font-size: 12px !important;
+
+    line-height: 1.4 !important;
+
+    resize: vertical !important;
+
+    outline: none !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================
+   INPUT FOCUS
+========================================= */
+
+.ai-instruction-input:focus {
+
+    border-color: #7c3aed !important;
+
+    box-shadow:
+        0 0 0 2px
+        rgba(124, 58, 237, 0.10) !important;
+}
+
+
+/* =========================================
+   GENERATE BUTTON
+========================================= */
+
+.ai-generate-button {
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: center !important;
+
+    width: 100% !important;
+
+    height: 32px !important;
+
+    padding:
+        0
+        12px !important;
+
+    border: none !important;
+
+    border-radius: 7px !important;
+
+    background: #6d28d9 !important;
+
+    color: #ffffff !important;
+
+    font-size: 12px !important;
+
+    font-weight: 600 !important;
+
+    cursor: pointer !important;
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================
+   GENERATE HOVER
+========================================= */
+
+.ai-generate-button:hover {
+
+    background: #5b21b6 !important;
+
+    transform: translateY(-1px) !important;
+}
+
+
+/* =========================================
+   GENERATE ACTIVE
+========================================= */
+
+.ai-generate-button:active {
+
+    transform: translateY(0) !important;
+}
+
+
+/* =========================================
+   SMALL SCREEN / GMAIL WINDOW
+========================================= */
+
+@media (max-width: 400px) {
+
+    .ai-tone-menu {
+
+        width:
+            calc(100vw - 20px) !important;
+
+    }
+
+    .ai-tone-option {
+
+        min-width: 50px !important;
+
+        font-size: 10px !important;
+
+        padding:
+            0 6px !important;
+    }
+
+}
+
+
+/* Positioning fix for Gmail's scrolling compose UI. JavaScript calculates the exact position. */
+.ai-tone-menu {
+    position: fixed !important;
+    visibility: hidden;
+}

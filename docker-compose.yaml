@@ -1,0 +1,17 @@
+services:
+
+  backend:
+    build:
+      context: ./smart-email-ai-assistant-backend
+    container_name: smart-email-backend
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./smart-email-ai-assistant-writer-frontend
+    container_name: smart-email-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
