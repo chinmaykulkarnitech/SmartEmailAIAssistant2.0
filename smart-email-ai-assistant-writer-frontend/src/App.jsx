@@ -57,41 +57,39 @@ function App() {
           : JSON.stringify(response.data)
       );
 
+    
     } catch (err) {
-      console.error("Generate reply error:", err);
+  console.error("Generate reply error:", err);
 
-      const status = err?.response?.status;
-      const serverMessage = err?.response?.data;
+  const status = err?.response?.status;
+  const serverMessage = err?.response?.data;
 
-      if (status === 503) {
-        setError(
-          "Gemini is temporarily unavailable. Please try again in a few seconds."
-        );
-      } else if (status === 401 || status === 403) {
-        setError(
-          "The Gemini API key is invalid or unauthorized."
-        );
-      } else if (status === 429) {
-        setError(
-          "Gemini API rate limit reached. Please try again later."
-        );
-      } else if (serverMessage) {
-        setError(String(serverMessage));
-      } 
-      } else if (status === 500) {
-  setError(
-    "Backend error: The request reached Spring Boot, but the server encountered an internal error."
-  );
-} else {
-  setError(
-    "Request failed. Please check the backend logs."
-  );
+  if (status === 503) {
+    setError(
+      "Gemini is temporarily unavailable. Please try again in a few seconds."
+    );
+  } else if (status === 401 || status === 403) {
+    setError(
+      "The Gemini API key is invalid or unauthorized."
+    );
+  } else if (status === 429) {
+    setError(
+      "Gemini API rate limit reached. Please try again later."
+    );
+  } else if (status === 500) {
+    setError(
+      "Backend error. The request reached the server, but the server encountered an internal error."
+    );
+  } else if (serverMessage) {
+    setError(String(serverMessage));
+  } else {
+    setError(
+      "Request failed. Please check the backend."
+    );
+  }
+} finally {
+  setLoading(false);
 }
-
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -243,6 +241,8 @@ function App() {
 
     </Container>
   );
+}
+
 }
 
 export default App;
