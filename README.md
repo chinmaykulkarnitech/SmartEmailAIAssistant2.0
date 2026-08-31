@@ -115,3 +115,6 @@ Use environment variables or secure configuration mechanisms for sensitive infor
 **Smart Email AI Reply** — AI-powered email productivity assistant.
 
 Built using Java, Spring Boot, JavaScript, Chrome Extension APIs, and LLM-based processing.
+
+## Author 
+**Chinmay Kulkarni**
