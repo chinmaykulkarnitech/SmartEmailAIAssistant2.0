@@ -43,7 +43,7 @@ function App() {
       console.log("API KEY LENGTH:", apiKey.length);
 
       const response = await axios.post(
-        "http://localhost:8080/api/email/generate",
+        "http://localhost:9090/api/email/generate",
         {
           emailContent: emailContent.trim(),
           tone,
@@ -77,11 +77,16 @@ function App() {
         );
       } else if (serverMessage) {
         setError(String(serverMessage));
-      } else {
-        setError(
-          "Could not connect to the backend. Make sure Spring Boot is running on port 8080."
-        );
-      }
+      } 
+      } else if (status === 500) {
+  setError(
+    "Backend error: The request reached Spring Boot, but the server encountered an internal error."
+  );
+} else {
+  setError(
+    "Request failed. Please check the backend logs."
+  );
+}
 
     } finally {
       setLoading(false);
