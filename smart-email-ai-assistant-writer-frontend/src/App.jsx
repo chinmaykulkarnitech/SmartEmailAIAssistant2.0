@@ -21,6 +21,7 @@ function App() {
   const [tone, setTone] = useState("professional");
   const [loading, setLoading] = useState(false);
   const [generatedReply, setGeneratedReply] = useState("");
+  const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState("");
 
   const handleSubmit = async () => {
@@ -37,7 +38,7 @@ function App() {
     setLoading(true);
     setError("");
     setGeneratedReply("");
-
+    setAnalysis(null);
     try {
       console.log("API KEY PRESENT:", !!apiKey);
       console.log("API KEY LENGTH:", apiKey.length);
@@ -51,11 +52,8 @@ function App() {
         }
       );
 
-      setGeneratedReply(
-        typeof response.data === "string"
-          ? response.data
-          : JSON.stringify(response.data)
-      );
+      setAnalysis(response.data);
+      setGeneratedReply(response.data.reply || "");
     } catch (err) {
       console.error("Generate reply error:", err);
 
@@ -180,6 +178,57 @@ function App() {
             }
           }}
         />
+
+        {analysis && (
+            <Box
+                sx={{
+                  mt: 3,
+                  p: 3,
+                  border: "1px solid #ddd",
+                  borderRadius: 2
+                }}
+            >
+              <Typography variant="h6" fontWeight="bold">
+                🧠 Email Intelligence
+              </Typography>
+
+              <Typography sx={{ mt: 2 }}>
+                <strong>Intent:</strong>{" "}
+                {analysis.intent?.replaceAll("_", " ")}
+              </Typography>
+
+              <Typography sx={{ mt: 1 }}>
+                <strong>Priority:</strong>{" "}
+                {analysis.priority}
+              </Typography>
+
+              <Typography sx={{ mt: 1 }}>
+                <strong>Sentiment:</strong>{" "}
+                {analysis.sentiment}
+              </Typography>
+
+              <Typography sx={{ mt: 1 }}>
+                <strong>Confidence:</strong>{" "}
+                {Math.round((analysis.confidence || 0) * 100)}%
+              </Typography>
+
+              {analysis.keyPoints?.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography fontWeight="bold">
+                      Key Points
+                    </Typography>
+
+                    <Box component="ul">
+                      {analysis.keyPoints.map((point, index) => (
+                          <li key={index}>
+                            {point}
+                          </li>
+                      ))}
+                    </Box>
+                  </Box>
+              )}
+            </Box>
+        )}
 
         <Button
           sx={{ mt: 2 }}

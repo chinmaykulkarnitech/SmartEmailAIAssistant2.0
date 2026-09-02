@@ -482,3 +482,42 @@
     position: fixed !important;
     visibility: hidden;
 }
+.ai-analysis-card {
+    width: 320px;
+    max-width: calc(100vw - 30px);
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    z-index: 2147483647;
+}
+
+.ai-analysis-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.ai-analysis-row {
+    margin: 7px 0;
+    line-height: 1.4;
+}
+
+.ai-analysis-key-title {
+    font-weight: 700;
+    margin-top: 14px;
+    margin-bottom: 6px;
+}
+
+.ai-analysis-card ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+}
+
+.ai-analysis-card li {
+    margin-bottom: 5px;
+    line-height: 1.4;
+}

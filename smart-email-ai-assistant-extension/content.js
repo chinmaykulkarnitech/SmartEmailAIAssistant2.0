@@ -1,5 +1,5 @@
 console.log('Smart Email AI Assistant loaded');
-
+let latestEmailAnalysis = null;
 let selectedTone = 'professional';
 let customInstruction = '';
 
@@ -202,14 +202,22 @@ async function generateReply(button, instruction = '') {
     })
 });
 
-        const responseText = await response.text();
+        const responseData = await response.json();
+
         if (!response.ok) {
-            throw new Error(`API Request Failed: ${response.status} - ${responseText}`);
+            throw new Error(
+                `API Request Failed: ${response.status} - ${JSON.stringify(responseData)}`
+            );
         }
 
-        const generatedReply = responseText.trim();
-        if (!generatedReply) throw new Error('Gemini returned an empty reply.');
+        latestEmailAnalysis = responseData;
+        showEmailAnalysis(button, responseData);
 
+        const generatedReply = responseData.reply?.trim();
+
+        if (!generatedReply) {
+            throw new Error('AI returned an empty reply.');
+        }
         // Gmail's compose editor is contenteditable. Insert text and notify Gmail of the change.
         const composeBoxes = Array.from(document.querySelectorAll('[role="textbox"][contenteditable="true"]'))
             .filter(isVisible);
@@ -279,4 +287,134 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startObserver, { once: true });
 } else {
     startObserver();
+}
+
+function showEmailAnalysis(button, analysis) {
+
+    document.querySelectorAll('.ai-analysis-card')
+        .forEach(card => card.remove());
+
+    const card = document.createElement('div');
+    card.className = 'ai-analysis-card';
+
+    const title = document.createElement('div');
+    title.className = 'ai-analysis-title';
+    title.textContent = '🧠 Email Intelligence';
+
+    card.appendChild(title);
+
+    const intent = document.createElement('div');
+    intent.className = 'ai-analysis-row';
+    intent.innerHTML =
+        `<strong>Intent:</strong> ${formatIntent(analysis.intent)}`;
+
+    card.appendChild(intent);
+
+    const priority = document.createElement('div');
+    priority.className = 'ai-analysis-row';
+    priority.innerHTML =
+        `<strong>Priority:</strong> ${formatPriority(analysis.priority)}`;
+
+    card.appendChild(priority);
+
+    const sentiment = document.createElement('div');
+    sentiment.className = 'ai-analysis-row';
+    sentiment.innerHTML =
+        `<strong>Sentiment:</strong> ${formatSentiment(analysis.sentiment)}`;
+
+    card.appendChild(sentiment);
+
+    const confidence = document.createElement('div');
+    confidence.className = 'ai-analysis-row';
+
+    const confidencePercent =
+        Math.round((analysis.confidence || 0) * 100);
+
+    confidence.innerHTML =
+        `<strong>Confidence:</strong> ${confidencePercent}%`;
+
+    card.appendChild(confidence);
+
+    if (Array.isArray(analysis.keyPoints)
+        && analysis.keyPoints.length > 0) {
+
+        const keyTitle = document.createElement('div');
+        keyTitle.className = 'ai-analysis-key-title';
+        keyTitle.textContent = 'Key Points';
+
+        card.appendChild(keyTitle);
+
+        const list = document.createElement('ul');
+
+        analysis.keyPoints.forEach(point => {
+
+            const item = document.createElement('li');
+            item.textContent = point;
+
+            list.appendChild(item);
+        });
+
+        card.appendChild(list);
+    }
+
+    document.body.appendChild(card);
+
+    const buttonRect = button.getBoundingClientRect();
+
+    card.style.position = 'fixed';
+    card.style.left = `${buttonRect.left}px`;
+    card.style.top = `${buttonRect.bottom + 8}px`;
+}
+
+function formatIntent(intent) {
+
+    if (!intent) return 'Unknown';
+
+    return intent
+        .toLowerCase()
+        .replaceAll('_', ' ')
+        .replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function formatPriority(priority) {
+
+    switch (priority) {
+
+        case 'URGENT':
+            return '🔴 Urgent';
+
+        case 'HIGH':
+            return '🟠 High';
+
+        case 'MEDIUM':
+            return '🟡 Medium';
+
+        case 'LOW':
+            return '🟢 Low';
+
+        default:
+            return '⚪ Unknown';
+    }
+}
+
+
+function formatSentiment(sentiment) {
+
+    switch (sentiment) {
+
+        case 'POSITIVE':
+            return '🟢 Positive';
+
+        case 'NEGATIVE':
+            return '🔴 Negative';
+
+        case 'NEUTRAL':
+            return '⚪ Neutral';
+
+        case 'MIXED':
+            return '🟡 Mixed';
+
+        default:
+            return 'Unknown';
+    }
 }
