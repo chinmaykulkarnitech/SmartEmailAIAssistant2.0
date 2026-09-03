@@ -44,28 +44,127 @@ function createAiButton() {
     return button;
 }
 
-function getEmailContent() {
-    const selectors = [
-        '.a3s.aiL',
-        '.a3s',
-        '.gmail_quote'
+// function getEmailContent() {
+//     const selectors = [
+//         '.a3s.aiL',
+//         '.a3s',
+//         '.gmail_quote'
+//     ];
+//
+//     const candidates = [];
+//
+//     for (const selector of selectors) {
+//         document.querySelectorAll(selector).forEach((element) => {
+//             if (isVisible(element)) {
+//                 const text = element.innerText?.trim();
+//                 if (text) candidates.push(text);
+//             }
+//         });
+//     }
+//
+//     if (!candidates.length) return '';
+//
+//     // Prefer the most substantial visible email body, while avoiding tiny UI strings.
+//     return candidates.sort((a, b) => b.length - a.length)[0];
+// }
+
+function getEmailThread() {
+    const messageSelectors = [
+        '.h7',
+        '.gs',
+        '.adn',
+        '.a3s'
     ];
 
-    const candidates = [];
+    const messages = [];
+    const seen = new Set();
 
-    for (const selector of selectors) {
+    for (const selector of messageSelectors) {
         document.querySelectorAll(selector).forEach((element) => {
-            if (isVisible(element)) {
-                const text = element.innerText?.trim();
-                if (text) candidates.push(text);
-            }
+            if (!isVisible(element)) return;
+
+            const text = element.innerText?.trim();
+            if (!text || text.length < 10) return;
+
+            // Avoid collecting the same Gmail content multiple times
+            const normalizedText = text
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (seen.has(normalizedText)) return;
+
+            seen.add(normalizedText);
+
+            messages.push({
+                element,
+                text
+            });
         });
     }
 
-    if (!candidates.length) return '';
+    if (!messages.length) {
+        return {
+            threadContent: '',
+            latestMessage: ''
+        };
+    }
 
-    // Prefer the most substantial visible email body, while avoiding tiny UI strings.
-    return candidates.sort((a, b) => b.length - a.length)[0];
+    /*
+     * Gmail can expose quoted/expanded messages through several
+     * overlapping DOM elements. Remove obvious duplicates where
+     * one message is completely contained inside another.
+     */
+    const uniqueMessages = messages.filter((message, index, array) => {
+        return !array.some((other, otherIndex) => {
+            if (index === otherIndex) return false;
+
+            const current = message.text.replace(/\s+/g, ' ').trim();
+            const otherText = other.text.replace(/\s+/g, ' ').trim();
+
+            return (
+                otherText.length > current.length &&
+                otherText.includes(current)
+            );
+        });
+    });
+
+    /*
+     * Sort messages according to their position in the Gmail DOM.
+     * Gmail normally renders older messages before newer messages.
+     */
+    uniqueMessages.sort((a, b) => {
+        if (a.element === b.element) return 0;
+
+        const position = a.element.compareDocumentPosition(b.element);
+
+        if (position & Node.DOCUMENT_POSITION_FOLLOWING) {
+            return -1;
+        }
+
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) {
+            return 1;
+        }
+
+        return 0;
+    });
+
+    const threadContent = uniqueMessages
+        .map((message, index) => {
+            return `MESSAGE ${index + 1}\n${message.text}`;
+        })
+        .join('\n\n------------------------------\n\n');
+
+    /*
+     * The last message in the extracted conversation is treated
+     * as the latest message that needs a reply.
+     */
+    const latestMessage =
+        uniqueMessages[uniqueMessages.length - 1]?.text || '';
+
+    return {
+        threadContent,
+        latestMessage
+    };
 }
 
 function createToneMenu(button) {
@@ -177,10 +276,20 @@ async function generateReply(button, instruction = '') {
         button.classList.add('generating');
         button.style.pointerEvents = 'none';
 
-        const emailContent = getEmailContent();
+    /*    const emailContent = getEmailContent();
         if (!emailContent) {
             throw new Error('No email content found. Open the email you want to reply to and try again.');
+        } */
+
+        const emailThread = getEmailThread();
+
+        if (!emailThread.threadContent) {
+            throw new Error(
+                'No email conversation found. Open the email thread and try again.'
+            );
         }
+
+        console.log('AI Email Thread:', emailThread);
 
         const result = await chrome.storage.local.get(['geminiApiKey']);
         const apiKey = result.geminiApiKey;
@@ -194,12 +303,19 @@ async function generateReply(button, instruction = '') {
     headers: {
         'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-        emailContent,
-        tone: selectedTone,
-        customInstruction: instruction,
-        apiKey
-    })
+    // body: JSON.stringify({
+    //     emailContent,
+    //     tone: selectedTone,
+    //     customInstruction: instruction,
+    //     apiKey
+    // })
+            body: JSON.stringify({
+                threadContent: emailThread.threadContent,
+                latestMessage: emailThread.latestMessage,
+                tone: selectedTone,
+                customInstruction: instruction,
+                apiKey
+            })
 });
 
         const responseData = await response.json();
@@ -211,9 +327,14 @@ async function generateReply(button, instruction = '') {
         }
 
         latestEmailAnalysis = responseData;
-        showEmailAnalysis(button, responseData);
 
         const generatedReply = responseData.reply?.trim();
+
+        if (!generatedReply) {
+            throw new Error('AI returned an empty reply.');
+        }
+
+        showEmailAnalysis(button, responseData);
 
         if (!generatedReply) {
             throw new Error('AI returned an empty reply.');
@@ -270,29 +391,37 @@ function scanForComposeWindows() {
 }
 
 // Gmail is a SPA, so compose elements appear after the initial page load.
-function startObserver() {
-    scanForComposeWindows();
 
-    const observer = new MutationObserver(() => {
-        scanForComposeWindows();
-    });
+// Gmail is a SPA, so compose elements appear after
+// the initial page load.
 
-    observer.observe(document.body, { childList: true, subtree: true });
+// ============================================================
+// EMAIL INTELLIGENCE CLEANUP
+// ============================================================
 
-    // A lightweight fallback catches Gmail UI changes that do not produce useful mutations.
-    setInterval(scanForComposeWindows, 1500);
+function removeEmailAnalysis() {
+    document.querySelectorAll('.ai-analysis-card')
+        .forEach(card => card.remove());
+
+    latestEmailAnalysis = null;
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startObserver, { once: true });
-} else {
-    startObserver();
+
+// Remove the AI tone menu if it is still open.
+function removeAiToneMenu() {
+    document.querySelectorAll('.ai-tone-menu')
+        .forEach(menu => menu.remove());
 }
+
+
+// ============================================================
+// EMAIL INTELLIGENCE PANEL
+// ============================================================
 
 function showEmailAnalysis(button, analysis) {
 
-    document.querySelectorAll('.ai-analysis-card')
-        .forEach(card => card.remove());
+    // Remove any previous analysis before showing new one.
+    removeEmailAnalysis();
 
     const card = document.createElement('div');
     card.className = 'ai-analysis-card';
@@ -303,26 +432,49 @@ function showEmailAnalysis(button, analysis) {
 
     card.appendChild(title);
 
+
+    // -------------------------
+    // Intent
+    // -------------------------
+
     const intent = document.createElement('div');
     intent.className = 'ai-analysis-row';
+
     intent.innerHTML =
         `<strong>Intent:</strong> ${formatIntent(analysis.intent)}`;
 
     card.appendChild(intent);
 
+
+    // -------------------------
+    // Priority
+    // -------------------------
+
     const priority = document.createElement('div');
     priority.className = 'ai-analysis-row';
+
     priority.innerHTML =
         `<strong>Priority:</strong> ${formatPriority(analysis.priority)}`;
 
     card.appendChild(priority);
 
+
+    // -------------------------
+    // Sentiment
+    // -------------------------
+
     const sentiment = document.createElement('div');
     sentiment.className = 'ai-analysis-row';
+
     sentiment.innerHTML =
         `<strong>Sentiment:</strong> ${formatSentiment(analysis.sentiment)}`;
 
     card.appendChild(sentiment);
+
+
+    // -------------------------
+    // Confidence
+    // -------------------------
 
     const confidence = document.createElement('div');
     confidence.className = 'ai-analysis-row';
@@ -335,8 +487,15 @@ function showEmailAnalysis(button, analysis) {
 
     card.appendChild(confidence);
 
-    if (Array.isArray(analysis.keyPoints)
-        && analysis.keyPoints.length > 0) {
+
+    // -------------------------
+    // Key Points
+    // -------------------------
+
+    if (
+        Array.isArray(analysis.keyPoints) &&
+        analysis.keyPoints.length > 0
+    ) {
 
         const keyTitle = document.createElement('div');
         keyTitle.className = 'ai-analysis-key-title';
@@ -357,8 +516,12 @@ function showEmailAnalysis(button, analysis) {
         card.appendChild(list);
     }
 
+
+    // Add panel to Gmail page.
     document.body.appendChild(card);
 
+
+    // Position panel below AI Reply button.
     const buttonRect = button.getBoundingClientRect();
 
     card.style.position = 'fixed';
@@ -366,15 +529,112 @@ function showEmailAnalysis(button, analysis) {
     card.style.top = `${buttonRect.bottom + 8}px`;
 }
 
+
+// ============================================================
+// SEND BUTTON CLEANUP
+// ============================================================
+
+function setupSendButtonCleanup() {
+
+    const observer = new MutationObserver(() => {
+
+        const sendButtons = document.querySelectorAll(
+            '[role="button"][data-tooltip*="Send"],' +
+            '[role="button"][aria-label*="Send"],' +
+            '.gU.Up'
+        );
+
+
+        sendButtons.forEach((sendButton) => {
+
+            // Prevent attaching multiple listeners.
+            if (
+                sendButton.dataset.aiCleanupAttached === 'true'
+            ) {
+                return;
+            }
+
+
+            sendButton.dataset.aiCleanupAttached = 'true';
+
+
+            sendButton.addEventListener('click', () => {
+
+                console.log(
+                    'Email sent. Cleaning AI UI.'
+                );
+
+
+                // Gmail needs a small amount of time
+                // to process the send action.
+                setTimeout(() => {
+
+                    removeEmailAnalysis();
+                    removeAiToneMenu();
+
+                }, 500);
+
+            });
+
+        });
+
+    });
+
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+
+// ============================================================
+// GMAIL NAVIGATION CLEANUP
+// ============================================================
+
+function setupNavigationCleanup() {
+
+    let lastUrl = location.href;
+
+
+    setInterval(() => {
+
+        if (location.href !== lastUrl) {
+
+            lastUrl = location.href;
+
+
+            console.log(
+                'Gmail conversation changed. Cleaning old AI UI.'
+            );
+
+
+            removeEmailAnalysis();
+            removeAiToneMenu();
+
+        }
+
+    }, 500);
+}
+
+
+// ============================================================
+// FORMAT FUNCTIONS
+// ============================================================
+
 function formatIntent(intent) {
 
-    if (!intent) return 'Unknown';
+    if (!intent) {
+        return 'Unknown';
+    }
+
 
     return intent
         .toLowerCase()
         .replaceAll('_', ' ')
         .replace(/\b\w/g, char => char.toUpperCase());
 }
+
 
 function formatPriority(priority) {
 
@@ -415,6 +675,64 @@ function formatSentiment(sentiment) {
             return '🟡 Mixed';
 
         default:
-            return 'Unknown';
+            return '⚪ Unknown';
     }
+}
+
+
+// ============================================================
+// GMAIL COMPOSE OBSERVER
+// ============================================================
+
+function startObserver() {
+
+    // Detect compose windows immediately.
+    scanForComposeWindows();
+
+
+    // Setup cleanup listeners.
+    setupSendButtonCleanup();
+    setupNavigationCleanup();
+
+
+    // Gmail dynamically changes the DOM.
+    const observer = new MutationObserver(() => {
+
+        scanForComposeWindows();
+
+    });
+
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+
+    // Extra scan because Gmail sometimes changes
+    // compose elements without predictable mutations.
+    setInterval(() => {
+
+        scanForComposeWindows();
+
+    }, 1500);
+}
+
+
+// ============================================================
+// START EXTENSION
+// ============================================================
+
+if (document.readyState === 'loading') {
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        startObserver,
+        { once: true }
+    );
+
+} else {
+
+    startObserver();
+
 }
