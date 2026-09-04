@@ -1,7 +1,10 @@
 console.log('Smart Email AI Assistant loaded');
 let latestEmailAnalysis = null;
 let selectedTone = 'professional';
+let selectedLanguage = 'auto';
+let selectedReplyLength = 'medium';
 let customInstruction = '';
+let selectedIntelligenceLanguage = 'auto';
 
 function isVisible(element) {
     if (!element) return false;
@@ -173,10 +176,19 @@ function createToneMenu(button) {
     const menu = document.createElement('div');
     menu.className = 'ai-tone-menu';
 
+    // ============================================================
+    // TITLE
+    // ============================================================
+
     const title = document.createElement('div');
     title.className = 'ai-tone-title';
     title.textContent = 'AI Reply Settings';
     menu.appendChild(title);
+
+
+    // ============================================================
+    // REPLY TONE
+    // ============================================================
 
     const toneLabel = document.createElement('div');
     toneLabel.className = 'ai-input-label';
@@ -195,15 +207,27 @@ function createToneMenu(button) {
     toneContainer.className = 'ai-tone-options';
 
     tones.forEach(([name, value]) => {
+
         const option = document.createElement('button');
+
         option.className = 'ai-tone-option';
         option.type = 'button';
         option.textContent = name;
-        if (selectedTone === value) option.classList.add('selected');
+
+        if (selectedTone === value) {
+            option.classList.add('selected');
+        }
 
         option.addEventListener('click', () => {
+
             selectedTone = value;
-            toneContainer.querySelectorAll('.ai-tone-option').forEach((item) => item.classList.remove('selected'));
+
+            toneContainer
+                .querySelectorAll('.ai-tone-option')
+                .forEach((item) => {
+                    item.classList.remove('selected');
+                });
+
             option.classList.add('selected');
         });
 
@@ -212,62 +236,302 @@ function createToneMenu(button) {
 
     menu.appendChild(toneContainer);
 
+
+    // ============================================================
+    // REPLY LANGUAGE
+    // ============================================================
+
+    const languageLabel = document.createElement('div');
+    languageLabel.className = 'ai-input-label';
+    languageLabel.textContent = 'Reply Language';
+
+    menu.appendChild(languageLabel);
+
+    const languages = [
+        ['Auto Detect', 'auto'],
+        ['English', 'english'],
+        ['Hindi', 'hindi'],
+        ['Marathi', 'marathi'],
+        ['Spanish', 'spanish'],
+        ['French', 'french'],
+        ['German', 'german']
+    ];
+
+    const languageContainer = document.createElement('div');
+    languageContainer.className = 'ai-tone-options';
+
+    languages.forEach(([name, value]) => {
+
+        const option = document.createElement('button');
+
+        option.className = 'ai-tone-option';
+        option.type = 'button';
+        option.textContent = name;
+
+        if (selectedLanguage === value) {
+            option.classList.add('selected');
+        }
+
+        option.addEventListener('click', () => {
+
+            selectedLanguage = value;
+
+            languageContainer
+                .querySelectorAll('.ai-tone-option')
+                .forEach((item) => {
+                    item.classList.remove('selected');
+                });
+
+            option.classList.add('selected');
+        });
+
+        languageContainer.appendChild(option);
+    });
+
+    menu.appendChild(languageContainer);
+
+
+    const intelligenceLanguageLabel = document.createElement('div');
+    intelligenceLanguageLabel.className = 'ai-input-label';
+    intelligenceLanguageLabel.textContent = 'Intelligence Language';
+    menu.appendChild(intelligenceLanguageLabel);
+
+    const intelligenceLanguages = [
+        ['Auto Detect', 'auto'],
+        ['English', 'english'],
+        ['Hindi', 'hindi'],
+        ['Marathi', 'marathi'],
+        ['Spanish', 'spanish'],
+        ['French', 'french'],
+        ['German', 'german']
+    ];
+
+    const intelligenceLanguageContainer = document.createElement('div');
+    intelligenceLanguageContainer.className = 'ai-tone-options';
+
+    intelligenceLanguages.forEach(([name, value]) => {
+        const option = document.createElement('button');
+        option.className = 'ai-tone-option';
+        option.type = 'button';
+        option.textContent = name;
+
+        if (selectedIntelligenceLanguage === value) {
+            option.classList.add('selected');
+        }
+
+        option.addEventListener('click', () => {
+            selectedIntelligenceLanguage = value;
+
+            intelligenceLanguageContainer
+                .querySelectorAll('.ai-tone-option')
+                .forEach((item) => {
+                    item.classList.remove('selected');
+                });
+
+            option.classList.add('selected');
+        });
+
+        intelligenceLanguageContainer.appendChild(option);
+    });
+
+    menu.appendChild(intelligenceLanguageContainer);
+
+
+    // ============================================================
+    // REPLY LENGTH
+    // ============================================================
+
+    const lengthLabel = document.createElement('div');
+    lengthLabel.className = 'ai-input-label';
+    lengthLabel.textContent = 'Reply Length';
+
+    menu.appendChild(lengthLabel);
+
+    const replyLengths = [
+        ['Short', 'short'],
+        ['Medium', 'medium'],
+        ['Long', 'long']
+    ];
+
+    const lengthContainer = document.createElement('div');
+    lengthContainer.className = 'ai-tone-options';
+
+    replyLengths.forEach(([name, value]) => {
+
+        const option = document.createElement('button');
+
+        option.className = 'ai-tone-option';
+        option.type = 'button';
+        option.textContent = name;
+
+        if (selectedReplyLength === value) {
+            option.classList.add('selected');
+        }
+
+        option.addEventListener('click', () => {
+
+            selectedReplyLength = value;
+
+            lengthContainer
+                .querySelectorAll('.ai-tone-option')
+                .forEach((item) => {
+                    item.classList.remove('selected');
+                });
+
+            option.classList.add('selected');
+        });
+
+        lengthContainer.appendChild(option);
+    });
+
+    menu.appendChild(lengthContainer);
+
+
+    // ============================================================
+    // CUSTOM INSTRUCTION
+    // ============================================================
+
     const instructionLabel = document.createElement('div');
     instructionLabel.className = 'ai-input-label';
     instructionLabel.textContent = 'Custom Instruction (Optional)';
+
     menu.appendChild(instructionLabel);
 
     const instructionInput = document.createElement('textarea');
+
     instructionInput.className = 'ai-instruction-input';
-    instructionInput.placeholder = 'Example: Ask if Monday at 3 PM works for them.';
+
+    instructionInput.placeholder =
+        'Example: Ask if Monday at 3 PM works for them.';
+
     instructionInput.rows = 3;
+
     instructionInput.value = customInstruction;
+
     instructionInput.addEventListener('input', () => {
         customInstruction = instructionInput.value;
     });
+
     menu.appendChild(instructionInput);
 
+
+    // ============================================================
+    // GENERATE BUTTON
+    // ============================================================
+
     const generateButton = document.createElement('button');
+
     generateButton.className = 'ai-generate-button';
+
     generateButton.type = 'button';
+
     generateButton.textContent = '✨ Generate Reply';
+
     generateButton.addEventListener('click', async () => {
-        customInstruction = instructionInput.value.trim();
+
+        customInstruction =
+            instructionInput.value.trim();
+
         menu.remove();
-        await generateReply(button, customInstruction);
+
+        await generateReply(
+            button,
+            customInstruction
+        );
     });
+
     menu.appendChild(generateButton);
+
+
+    // ============================================================
+    // ADD MENU TO PAGE
+    // ============================================================
 
     document.body.appendChild(menu);
 
-    // Position after the menu has been added so its real dimensions are available.
-    const buttonRect = button.getBoundingClientRect();
-    const menuRect = menu.getBoundingClientRect();
+
+    // ============================================================
+    // POSITION MENU
+    // ============================================================
+
+    const buttonRect =
+        button.getBoundingClientRect();
+
+    const menuRect =
+        menu.getBoundingClientRect();
+
     const padding = 10;
 
-    let left = Math.max(padding, Math.min(
-        buttonRect.left,
-        window.innerWidth - menuRect.width - padding
-    ));
+    let left = Math.max(
+        padding,
+        Math.min(
+            buttonRect.left,
+            window.innerWidth -
+            menuRect.width -
+            padding
+        )
+    );
 
-    let top = buttonRect.bottom + 6;
-    if (top + menuRect.height > window.innerHeight - padding) {
-        top = buttonRect.top - menuRect.height - 6;
+    let top =
+        buttonRect.bottom + 6;
+
+    if (
+        top + menuRect.height >
+        window.innerHeight - padding
+    ) {
+        top =
+            buttonRect.top -
+            menuRect.height -
+            6;
     }
-    top = Math.max(padding, top);
+
+    top = Math.max(
+        padding,
+        top
+    );
 
     menu.style.position = 'fixed';
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
-    menu.style.visibility = 'visible';
+
+    menu.style.left =
+        `${left}px`;
+
+    menu.style.top =
+        `${top}px`;
+
+    menu.style.visibility =
+        'visible';
+
+
+    // ============================================================
+    // CLOSE WHEN CLICKING OUTSIDE
+    // ============================================================
 
     const closeOnOutsideClick = (event) => {
-        if (!menu.contains(event.target) && event.target !== button) {
+
+        if (
+            !menu.contains(event.target) &&
+            event.target !== button
+        ) {
+
             menu.remove();
-            document.removeEventListener('click', closeOnOutsideClick, true);
+
+            document.removeEventListener(
+                'click',
+                closeOnOutsideClick,
+                true
+            );
         }
     };
-    setTimeout(() => document.addEventListener('click', closeOnOutsideClick, true), 0);
+
+    setTimeout(() => {
+
+        document.addEventListener(
+            'click',
+            closeOnOutsideClick,
+            true
+        );
+
+    }, 0);
 }
 
 async function generateReply(button, instruction = '') {
@@ -275,11 +539,6 @@ async function generateReply(button, instruction = '') {
         button.textContent = '⟳ Generating...';
         button.classList.add('generating');
         button.style.pointerEvents = 'none';
-
-    /*    const emailContent = getEmailContent();
-        if (!emailContent) {
-            throw new Error('No email content found. Open the email you want to reply to and try again.');
-        } */
 
         const emailThread = getEmailThread();
 
@@ -291,32 +550,43 @@ async function generateReply(button, instruction = '') {
 
         console.log('AI Email Thread:', emailThread);
 
+        console.log('Selected Tone:', selectedTone);
+        console.log('Selected Language:', selectedLanguage);
+        console.log('Selected Reply Length:', selectedReplyLength);
+
         const result = await chrome.storage.local.get(['geminiApiKey']);
         const apiKey = result.geminiApiKey;
 
         if (!apiKey) {
-            throw new Error('Please configure your Gemini API key in the extension settings.');
+            throw new Error(
+                'Please configure your Gemini API key in the extension settings.'
+            );
         }
 
-        const response = await fetch('http://localhost:9090/api/email/generate', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    // body: JSON.stringify({
-    //     emailContent,
-    //     tone: selectedTone,
-    //     customInstruction: instruction,
-    //     apiKey
-    // })
-            body: JSON.stringify({
-                threadContent: emailThread.threadContent,
-                latestMessage: emailThread.latestMessage,
-                tone: selectedTone,
-                customInstruction: instruction,
-                apiKey
-            })
-});
+        const response = await fetch(
+            'http://localhost:9090/api/email/generate',
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    threadContent: emailThread.threadContent,
+                    latestMessage: emailThread.latestMessage,
+
+                    tone: selectedTone,
+                    language: selectedLanguage,
+                    intelligenceLanguage: selectedIntelligenceLanguage,
+                    replyLength: selectedReplyLength,
+
+                    customInstruction: instruction,
+
+                    apiKey: apiKey
+                })
+            }
+        );
 
         const responseData = await response.json();
 
@@ -331,44 +601,76 @@ async function generateReply(button, instruction = '') {
         const generatedReply = responseData.reply?.trim();
 
         if (!generatedReply) {
-            throw new Error('AI returned an empty reply.');
+            throw new Error(
+                'AI returned an empty reply.'
+            );
         }
 
         showEmailAnalysis(button, responseData);
 
-        if (!generatedReply) {
-            throw new Error('AI returned an empty reply.');
-        }
-        // Gmail's compose editor is contenteditable. Insert text and notify Gmail of the change.
-        const composeBoxes = Array.from(document.querySelectorAll('[role="textbox"][contenteditable="true"]'))
-            .filter(isVisible);
-        const composeBox = composeBoxes[composeBoxes.length - 1];
+        // Gmail's compose editor is contenteditable.
+        const composeBoxes = Array.from(
+            document.querySelectorAll(
+                '[role="textbox"][contenteditable="true"]'
+            )
+        ).filter(isVisible);
+
+        const composeBox =
+            composeBoxes[composeBoxes.length - 1];
 
         if (!composeBox) {
-            throw new Error('Could not find the Gmail compose box.');
+            throw new Error(
+                'Could not find the Gmail compose box.'
+            );
         }
 
         composeBox.focus();
-        const inserted = document.execCommand('insertText', false, generatedReply);
+
+        const inserted = document.execCommand(
+            'insertText',
+            false,
+            generatedReply
+        );
 
         if (!inserted) {
             composeBox.textContent = generatedReply;
         }
 
-        composeBox.dispatchEvent(new InputEvent('input', {
-            bubbles: true,
-            inputType: 'insertText',
-            data: generatedReply
-        }));
+        composeBox.dispatchEvent(
+            new InputEvent('input', {
+                bubbles: true,
+                inputType: 'insertText',
+                data: generatedReply
+            })
+        );
 
-        console.log('AI reply inserted successfully.');
+        console.log(
+            'AI reply inserted successfully.'
+        );
+
     } catch (error) {
-        console.error('AI Reply Error:', error);
-        alert(error?.message || 'Failed to generate reply. Please try again.');
+
+        console.error(
+            'AI Reply Error:',
+            error
+        );
+
+        alert(
+            error?.message ||
+            'Failed to generate reply. Please try again.'
+        );
+
     } finally {
-        button.textContent = '✨ AI Reply ▾';
-        button.classList.remove('generating');
-        button.style.pointerEvents = 'auto';
+
+        button.textContent =
+            '✨ AI Reply ▾';
+
+        button.classList.remove(
+            'generating'
+        );
+
+        button.style.pointerEvents =
+            'auto';
     }
 }
 
@@ -414,9 +716,77 @@ function removeAiToneMenu() {
 }
 
 
+function getIntelligenceLabels(language) {
+
+    const labels = {
+        english: {
+            intent: 'Intent',
+            priority: 'Priority',
+            sentiment: 'Sentiment',
+            confidence: 'Confidence',
+            keyPoints: 'Key Points',
+            replyTranslation: 'Reply Translation',
+            intelligence: '🧠 Email Intelligence'
+        },
+
+        hindi: {
+            intent: 'इरादा',
+            priority: 'प्राथमिकता',
+            sentiment: 'भावना',
+            confidence: 'विश्वास',
+            keyPoints: 'मुख्य बिंदु',
+            replyTranslation: 'उत्तर का अनुवाद',
+            intelligence: '🧠 ईमेल इंटेलिजेंस'
+        },
+
+        marathi: {
+            intent: 'हेतू',
+            priority: 'प्राधान्य',
+            sentiment: 'भावना',
+            confidence: 'विश्वासार्हता',
+            keyPoints: 'महत्त्वाचे मुद्दे',
+            replyTranslation: 'उत्तराचे भाषांतर',
+            intelligence: '🧠 ईमेल इंटेलिजन्स'
+        },
+
+        spanish: {
+            intent: 'Intención',
+            priority: 'Prioridad',
+            sentiment: 'Sentimiento',
+            confidence: 'Confianza',
+            keyPoints: 'Puntos clave',
+            replyTranslation: 'Traducción de la respuesta',
+            intelligence: '🧠 Inteligencia del correo'
+        },
+
+        french: {
+            intent: 'Intention',
+            priority: 'Priorité',
+            sentiment: 'Sentiment',
+            confidence: 'Confiance',
+            keyPoints: 'Points clés',
+            replyTranslation: 'Traduction de la réponse',
+            intelligence: '🧠 Intelligence de l’e-mail'
+        },
+
+        german: {
+            intent: 'Absicht',
+            priority: 'Priorität',
+            sentiment: 'Stimmung',
+            confidence: 'Konfidenz',
+            keyPoints: 'Wichtige Punkte',
+            replyTranslation: 'Antwortübersetzung',
+            intelligence: '🧠 E-Mail-Intelligenz'
+        }
+    };
+
+    return labels[language] || labels.english;
+}
+
 // ============================================================
 // EMAIL INTELLIGENCE PANEL
 // ============================================================
+
 
 function showEmailAnalysis(button, analysis) {
 
@@ -425,7 +795,13 @@ function showEmailAnalysis(button, analysis) {
 
     const card = document.createElement('div');
     card.className = 'ai-analysis-card';
+    const displayLanguage =
+        selectedIntelligenceLanguage === 'auto'
+            ? analysis.intelligenceLanguage
+            : selectedIntelligenceLanguage;
 
+    const intelligenceLabels =
+        getIntelligenceLabels(displayLanguage);
     const title = document.createElement('div');
     title.className = 'ai-analysis-title';
     title.textContent = '🧠 Email Intelligence';
@@ -441,8 +817,7 @@ function showEmailAnalysis(button, analysis) {
     intent.className = 'ai-analysis-row';
 
     intent.innerHTML =
-        `<strong>Intent:</strong> ${formatIntent(analysis.intent)}`;
-
+        `<strong>${intelligenceLabels.intent}:</strong> ${analysis.intentLabel || formatIntent(analysis.intent)}`
     card.appendChild(intent);
 
 
@@ -454,8 +829,7 @@ function showEmailAnalysis(button, analysis) {
     priority.className = 'ai-analysis-row';
 
     priority.innerHTML =
-        `<strong>Priority:</strong> ${formatPriority(analysis.priority)}`;
-
+        `<strong>${intelligenceLabels.priority}:</strong> ${analysis.priorityLabel || formatPriority(analysis.priority)}`
     card.appendChild(priority);
 
 
@@ -467,8 +841,7 @@ function showEmailAnalysis(button, analysis) {
     sentiment.className = 'ai-analysis-row';
 
     sentiment.innerHTML =
-        `<strong>Sentiment:</strong> ${formatSentiment(analysis.sentiment)}`;
-
+        `<strong>${intelligenceLabels.sentiment}:</strong> ${analysis.sentimentLabel || formatSentiment(analysis.sentiment)}`
     card.appendChild(sentiment);
 
 
@@ -483,8 +856,7 @@ function showEmailAnalysis(button, analysis) {
         Math.round((analysis.confidence || 0) * 100);
 
     confidence.innerHTML =
-        `<strong>Confidence:</strong> ${confidencePercent}%`;
-
+        `<strong>${intelligenceLabels.confidence}:</strong> ${confidencePercent}%`
     card.appendChild(confidence);
 
 
@@ -499,7 +871,7 @@ function showEmailAnalysis(button, analysis) {
 
         const keyTitle = document.createElement('div');
         keyTitle.className = 'ai-analysis-key-title';
-        keyTitle.textContent = 'Key Points';
+        keyTitle.textContent = intelligenceLabels.keyPoints;
 
         card.appendChild(keyTitle);
 
@@ -516,6 +888,23 @@ function showEmailAnalysis(button, analysis) {
         card.appendChild(list);
     }
 
+    if (analysis.replyTranslation?.trim()) {
+
+        const translationTitle = document.createElement('div');
+        translationTitle.className =
+            'ai-analysis-translation-title';
+
+        translationTitle.textContent =
+            intelligenceLabels.replyTranslation;
+        card.appendChild(translationTitle);
+
+        const translation = document.createElement('div');
+        translation.className = 'ai-reply-translation';
+        translation.textContent =
+            analysis.replyTranslation.trim();
+
+        card.appendChild(translation);
+    }
 
     // Add panel to Gmail page.
     document.body.appendChild(card);
@@ -528,7 +917,6 @@ function showEmailAnalysis(button, analysis) {
     card.style.left = `${buttonRect.left}px`;
     card.style.top = `${buttonRect.bottom + 8}px`;
 }
-
 
 // ============================================================
 // SEND BUTTON CLEANUP
