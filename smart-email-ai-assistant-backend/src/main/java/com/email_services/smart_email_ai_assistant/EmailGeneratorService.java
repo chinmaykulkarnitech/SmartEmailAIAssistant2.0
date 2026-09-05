@@ -188,6 +188,15 @@ public class EmailGeneratorService {
 
         StringBuilder prompt = new StringBuilder();
 
+        java.time.LocalDate today =
+                java.time.LocalDate.now();
+
+        prompt.append(
+                "Today's date is: "
+                        + today
+                        + "\n\n"
+        );
+
         // -----------------------------------------
         // Base AI instructions
         // -----------------------------------------
@@ -367,23 +376,60 @@ public class EmailGeneratorService {
                 ```
 
                 Return exactly this structure:
-{
-  "intent": "STABLE_INTENT_VALUE",
-  "priority": "STABLE_PRIORITY_VALUE",
-  "sentiment": "STABLE_SENTIMENT_VALUE",
-  "intelligenceLanguage": "actual language used for intelligence",
-  "confidence": 0.0,
-  "intentLabel": "translated intent label",
-  "priorityLabel": "translated priority label",
-  "sentimentLabel": "translated sentiment label",
-  "keyPoints": [
-    "translated key point 1",
-    "translated key point 2",
-    "translated key point 3"
-  ],
-  "reply": "generated email reply in the requested Reply Language",
-  "replyTranslation": "translation of the generated reply into the requested Intelligence Language"
-}
+                   
+                
+                {
+                  "intent": "STABLE_INTENT_VALUE",
+                  "priority": "STABLE_PRIORITY_VALUE",
+                  "sentiment": "STABLE_SENTIMENT_VALUE",
+                  "intelligenceLanguage": "actual language used for intelligence",
+                  "confidence": 0.0,
+                  "intentLabel": "translated intent label",
+                  "priorityLabel": "translated priority label",
+                  "sentimentLabel": "translated sentiment label",
+                  "keyPoints": [
+                    "translated key point 1",
+                    "translated key point 2",
+                    "translated key point 3"
+                  ],
+                  "reply": "generated email reply in the requested Reply Language",
+                  "replyTranslation": "translation of the generated reply into the requested Intelligence Language",
+                  "actionRequired": true,
+                  "action": "Send the deployment report",
+                  "actionStatus": "PENDING",
+                  "deadlineDetected": true,
+                  "deadline": "September 10, 2026 at 5:00 PM",
+                  "deadlineDescription": "Deployment report must be sent by the requested deadline."
+                }
+                
+                // -----------------------------------------
+                // Action detection
+                // -----------------------------------------
+                
+                
+                        
+                IMPORTANT STATUS RULE:
+                
+                If the conversation shows that the user still needs to send,
+                submit, provide, complete, prepare, review, or perform something,
+                the status MUST be "PENDING".
+                
+                If the required action has a future deadline and there is no clear
+                evidence that the action has already been completed, the status
+                MUST be "PENDING".
+                
+                If a deadline is detected for an action that the user still needs
+                to perform, "actionStatus" MUST be "PENDING".
+                
+                Only use "COMPLETED" when the conversation clearly confirms that
+                the required action has already been completed.
+                
+                Only use "WAITING" when the user has already completed their part
+                and is waiting for another person.
+                
+                Never use "NONE" when "actionRequired" is true.
+                
+                
                 IMPORTANT:
 
                 "intent" must always contain the stable internal classification value.
@@ -478,6 +524,97 @@ public class EmailGeneratorService {
                 Only translate their corresponding Label fields.
 
                 """);
+        prompt.append("""
+                
+                        ACTION DETECTION:
+                
+                        Determine whether the conversation requires an action from
+                        the user.
+                
+                        Set "actionRequired" to true ONLY when the user clearly needs
+                        to perform an action based on the conversation.
+                
+                        Set "actionRequired" to false when no action is required.
+                
+                        If actionRequired is true:
+                        - "action" must clearly and briefly describe what the user needs
+                          to do.
+                        - "actionStatus" must normally be "PENDING" when the user still
+                          needs to perform the action.
+                
+                        ACTION STATUS VALUES:
+                
+                        PENDING:
+                        The user still needs to perform the required action.
+                
+                        WAITING:
+                        The user has completed their part and is waiting for another
+                        person to perform an action.
+                
+                        COMPLETED:
+                        The required action has already been completed.
+                
+                        NONE:
+                        No meaningful action is required.
+                
+                        IMPORTANT:
+                        - If actionRequired is true because the user needs to do something,
+                          do NOT use NONE.
+                        - If actionRequired is true and the action has not yet been completed,
+                          use PENDING.
+                        - If actionRequired is false, use NONE.
+                        - Never invent an action.
+                        - Use the entire conversation to determine whether an earlier
+                          commitment has already been completed.
+                
+                        """);
+        prompt.append("""
+        
+        ACTION DETECTION:
+
+        Determine whether the conversation requires an action from
+        the user.
+
+        Set "actionRequired" to true ONLY when the user clearly needs
+        to perform an action based on the conversation.
+
+        Set "actionRequired" to false when no action is required.
+
+        If actionRequired is true:
+
+        - "action" must clearly describe what the user needs to do.
+        - "actionStatus" must be PENDING if the action is not completed.
+
+        ACTION STATUS VALUES:
+
+        PENDING:
+        The user still needs to perform the required action.
+
+        WAITING:
+        The user completed their part and is waiting for another person.
+
+        COMPLETED:
+        The required action has already been completed.
+
+        NONE:
+        No action is required.
+
+        IMPORTANT:
+
+        Never use NONE when actionRequired is true.
+
+        If the user still needs to send, submit, provide, prepare,
+        complete, review, or perform something, use PENDING.
+
+        If there is a future deadline for an incomplete action,
+        use PENDING.
+        Only use COMPLETED when the conversation clearly confirms
+        that the action has already been completed.
+
+        Only use WAITING when the user has completed their part
+        and is waiting for another person.
+
+        """);
 
         prompt.append("""
     
@@ -738,9 +875,147 @@ public class EmailGeneratorService {
 
         prompt.append("\n\n");
 
+
+// -----------------------------------------
+// Deadline detection
+// -----------------------------------------
+
+        prompt.append("""
+        
+        DEADLINE DETECTION:
+
+        Carefully examine the ENTIRE email conversation for deadlines,
+        due dates, dates, or times by which an action is expected.
+
+        Set "deadlineDetected" to true when the conversation contains
+        a clearly stated deadline or a deadline that can be directly
+        resolved from an explicitly stated relative date.
+
+        Examples of valid deadlines:
+
+        "by September 10"
+        "before September 10, 2026"
+        "by Friday"
+        "before tomorrow"
+        "by the end of this week"
+        "before the 8th of this month"
+        "submit it at 5 PM tomorrow"
+
+        RELATIVE DATE RULES:
+
+        Use the provided current date to resolve relative dates.
+
+        Examples:
+
+        If today's date is 2026-09-05:
+
+        "tomorrow" = September 6, 2026
+
+        "the 8th of this month" = September 8, 2026
+
+        "before the 8th of this month" = September 8, 2026
+
+        IMPORTANT:
+        - Resolve relative dates only when the reference is clear.
+        - Use the month and year implied by the conversation and
+          today's date when appropriate.
+        - Do not invent a deadline.
+        - Do not convert vague expressions such as "soon", "shortly",
+          "as soon as possible", "when possible", or "later" into
+          a specific deadline.
+        - If a specific date or time is explicitly provided, preserve
+          its meaning accurately.
+        - If the conversation contains multiple dates, identify the
+          date that actually represents the deadline for the required
+          action.
+        - A date mentioned only as historical context is NOT necessarily
+          a deadline.
+
+        DEADLINE OUTPUT:
+
+        If a deadline is detected:
+
+        "deadlineDetected" must be true.
+
+        "deadline" must contain the resolved deadline in a clear
+        human-readable format.
+
+        "deadlineDescription" must briefly explain what action or
+        requirement the deadline applies to.
+
+        If no deadline is detected:
+
+        "deadlineDetected" must be false.
+
+        "deadline" must be an empty string.
+
+        "deadlineDescription" must be an empty string.
+
+        IMPORTANT:
+        Never invent a deadline that is not supported by the conversation.
+
+        """);
+
+        prompt.append("""
+        
+        FINAL OUTPUT REQUIREMENT:
+
+        Before generating the final JSON, you MUST check the ENTIRE
+        conversation for a deadline.
+
+        In this conversation, a deadline may be present in either
+        an earlier message or the latest message.
+
+        If the sender says something such as:
+
+        "before the 8th date of this month"
+        "before September 8"
+        "by September 8"
+        "by tomorrow"
+        "before Friday"
+
+        you MUST resolve the date using today's date and return:
+
+        "deadlineDetected": true
+
+        You MUST NOT omit the deadlineDetected field.
+
+        You MUST NOT omit the deadline field.
+
+        You MUST NOT omit the deadlineDescription field.
+
+        If a deadline exists, return the resolved date in the
+        "deadline" field.
+
+        For example, if today's date is 2026-09-05 and the email says
+        "before the 8th date of this month", return:
+
+        "deadlineDetected": true,
+        "deadline": "September 8, 2026",
+        "deadlineDescription": "Send the deployment report and all required materials"
+
+        If there is genuinely no deadline anywhere in the conversation,
+        return:
+
+        "deadlineDetected": false,
+        "deadline": "",
+        "deadlineDescription": ""
+
+        The final response MUST contain ALL of these fields:
+
+        actionRequired
+        action
+        actionStatus
+        deadlineDetected
+        deadline
+        deadlineDescription
+
+        Return ONLY the JSON object. Do not add explanations.
+
+        """);
+
         prompt.append(
-                "Analyze the latest message using the complete "
-                        + "conversation as context and generate the reply."
+                "Now analyze the complete conversation and return the final JSON response."
         );
 
         return prompt.toString();
@@ -936,15 +1211,34 @@ public class EmailGeneratorService {
             // Generated reply
             // -----------------------------------------
 
-            String reply =
-                    root.path("reply").asText();
-
+            String reply = root.path("reply").asText();
 
             String replyTranslation =
                     root.path("replyTranslation").asText();
-            // -----------------------------------------
-            // Basic validation
-            // -----------------------------------------
+
+
+            boolean actionRequired = root.path("actionRequired").asBoolean();
+            String action = root.path("action").asText();
+            String actionStatus = root.path("actionStatus").asText();
+
+
+
+            if (actionRequired && !"COMPLETED".equalsIgnoreCase(actionStatus)) {
+                actionStatus = "PENDING";
+            }
+
+            if (!actionRequired) {
+                actionStatus = "NONE";
+            }
+
+            boolean deadlineDetected =
+                    root.path("deadlineDetected").asBoolean();
+
+            String deadline =
+                    root.path("deadline").asText();
+
+            String deadlineDescription =
+                    root.path("deadlineDescription").asText();
 
             if (intent.isBlank()) {
 
@@ -1023,7 +1317,6 @@ public class EmailGeneratorService {
             // -----------------------------------------
             // Return final response
             // -----------------------------------------
-
             return new EmailAnalysisResponse(
                     intent,
                     priority,
@@ -1035,9 +1328,14 @@ public class EmailGeneratorService {
                     sentimentLabel,
                     keyPoints,
                     reply,
-                    replyTranslation
+                    replyTranslation,
+                    actionRequired,
+                    action,
+                    actionStatus,
+                    deadlineDetected,
+                    deadline,
+                    deadlineDescription
             );
-
         } catch (Exception e) {
 
             throw new RuntimeException(

@@ -18,12 +18,36 @@ public class EmailAnalysisResponse {
     private String sentimentLabel;
     private List<String> keyPoints;
 
+    public String getActionStatus() {
+        return actionStatus;
+    }
+
+    public void setActionStatus(String actionStatus) {
+        this.actionStatus = actionStatus;
+    }
+
     // Generated email reply
     private String reply;
     private String replyTranslation;
 
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    private boolean actionRequired;
+    private String action;
+    private String actionStatus;
+    private boolean deadlineDetected;
+    private String deadline;
+    private String deadlineDescription;
+
     public EmailAnalysisResponse() {
     }
+
     public EmailAnalysisResponse(
             String intent,
             String priority,
@@ -35,8 +59,14 @@ public class EmailAnalysisResponse {
             String sentimentLabel,
             List<String> keyPoints,
             String reply,
-            String replyTranslation) {
-
+            String replyTranslation,
+            boolean actionRequired,
+            String action,
+            String actionStatus,
+            boolean deadlineDetected,
+            String deadline,
+            String deadlineDescription
+    ) {
         this.intent = intent;
         this.priority = priority;
         this.sentiment = sentiment;
@@ -48,6 +78,12 @@ public class EmailAnalysisResponse {
         this.keyPoints = keyPoints;
         this.reply = reply;
         this.replyTranslation = replyTranslation;
+        this.actionRequired = actionRequired;
+        this.action = action;
+        this.actionStatus = actionStatus;
+        this.deadlineDetected = deadlineDetected;
+        this.deadline = deadline;
+        this.deadlineDescription = deadlineDescription;
     }
 
     public String getReplyTranslation() {
@@ -128,6 +164,14 @@ public class EmailAnalysisResponse {
 
     public void setKeyPoints(List<String> keyPoints) {
         this.keyPoints = keyPoints;
+    }
+
+    public boolean isActionRequired() {
+        return actionRequired;
+    }
+
+    public void setActionRequired(boolean actionRequired) {
+        this.actionRequired = actionRequired;
     }
 
     public String getReply() {

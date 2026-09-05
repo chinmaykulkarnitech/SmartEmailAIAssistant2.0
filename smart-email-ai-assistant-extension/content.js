@@ -1,3 +1,6 @@
+console.log('Chrome API:', chrome);
+console.log('Chrome Storage:', chrome?.storage);
+console.log('Chrome Runtime:', chrome?.runtime);
 console.log('Smart Email AI Assistant loaded');
 let latestEmailAnalysis = null;
 let selectedTone = 'professional';
@@ -5,6 +8,8 @@ let selectedLanguage = 'auto';
 let selectedReplyLength = 'medium';
 let customInstruction = '';
 let selectedIntelligenceLanguage = 'auto';
+let lastGeneratedReply = '';
+
 
 function isVisible(element) {
     if (!element) return false;
@@ -47,29 +52,7 @@ function createAiButton() {
     return button;
 }
 
-// function getEmailContent() {
-//     const selectors = [
-//         '.a3s.aiL',
-//         '.a3s',
-//         '.gmail_quote'
-//     ];
-//
-//     const candidates = [];
-//
-//     for (const selector of selectors) {
-//         document.querySelectorAll(selector).forEach((element) => {
-//             if (isVisible(element)) {
-//                 const text = element.innerText?.trim();
-//                 if (text) candidates.push(text);
-//             }
-//         });
-//     }
-//
-//     if (!candidates.length) return '';
-//
-//     // Prefer the most substantial visible email body, while avoiding tiny UI strings.
-//     return candidates.sort((a, b) => b.length - a.length)[0];
-// }
+
 
 function getEmailThread() {
     const messageSelectors = [
@@ -533,7 +516,61 @@ function createToneMenu(button) {
 
     }, 0);
 }
+function insertGeneratedReply(composeBox, generatedReply) {
 
+    const currentText =
+        composeBox.innerText?.trim() || '';
+
+    const previousGeneratedReply =
+        lastGeneratedReply.trim();
+
+    composeBox.focus();
+
+    /*
+     * If the compose box contains exactly
+     * the reply generated previously by AI,
+     * replace it.
+     */
+    if (
+        previousGeneratedReply &&
+        currentText === previousGeneratedReply
+    ) {
+
+        document.execCommand(
+            'selectAll',
+            false,
+            null
+        );
+
+        document.execCommand(
+            'insertText',
+            false,
+            generatedReply
+        );
+
+    } else {
+
+        /*
+         * The user has changed the compose content.
+         * Do NOT delete their text.
+         *
+         * Insert the new reply at the current cursor.
+         */
+        document.execCommand(
+            'insertText',
+            false,
+            generatedReply
+        );
+    }
+
+    composeBox.dispatchEvent(
+        new InputEvent('input', {
+            bubbles: true,
+            inputType: 'insertText',
+            data: generatedReply
+        })
+    );
+}
 async function generateReply(button, instruction = '') {
     try {
         button.textContent = '⟳ Generating...';
@@ -598,6 +635,12 @@ async function generateReply(button, instruction = '') {
 
         latestEmailAnalysis = responseData;
 
+        console.log('========== AI RESPONSE DEBUG ==========');
+        console.log('FULL AI RESPONSE:', JSON.stringify(responseData, null, 2));
+        console.log('deadlineDetected:', responseData.deadlineDetected);
+        console.log('deadline:', responseData.deadline);
+        console.log('deadlineDescription:', responseData.deadlineDescription);
+        console.log('========================================');
         const generatedReply = responseData.reply?.trim();
 
         if (!generatedReply) {
@@ -624,30 +667,16 @@ async function generateReply(button, instruction = '') {
             );
         }
 
-        composeBox.focus();
-
-        const inserted = document.execCommand(
-            'insertText',
-            false,
+        insertGeneratedReply(
+            composeBox,
             generatedReply
         );
 
-        if (!inserted) {
-            composeBox.textContent = generatedReply;
-        }
-
-        composeBox.dispatchEvent(
-            new InputEvent('input', {
-                bubbles: true,
-                inputType: 'insertText',
-                data: generatedReply
-            })
-        );
+        lastGeneratedReply = generatedReply;
 
         console.log(
             'AI reply inserted successfully.'
         );
-
     } catch (error) {
 
         console.error(
@@ -906,16 +935,132 @@ function showEmailAnalysis(button, analysis) {
         card.appendChild(translation);
     }
 
-    // Add panel to Gmail page.
-    document.body.appendChild(card);
+    const regenerateButton = document.createElement('button');
 
+    regenerateButton.className = 'ai-regenerate-button';
+    regenerateButton.textContent = '↻ Regenerate Reply';
 
-    // Position panel below AI Reply button.
+    regenerateButton.addEventListener('click', async () => {
+        regenerateButton.textContent = '⟳ Regenerating...';
+        regenerateButton.disabled = true;
+
+        try {
+            await generateReply(button, customInstruction);
+        } finally {
+            regenerateButton.textContent = '↻ Regenerate Reply';
+            regenerateButton.disabled = false;
+        }
+    });
+    card.appendChild(regenerateButton);
+
+// Position panel below AI Reply button.
     const buttonRect = button.getBoundingClientRect();
 
     card.style.position = 'fixed';
     card.style.left = `${buttonRect.left}px`;
     card.style.top = `${buttonRect.bottom + 8}px`;
+
+    // Action Detection
+    const actionSection = document.createElement('div');
+
+    actionSection.className = 'ai-action-section';
+
+    const actionTitle = document.createElement('div');
+
+    actionTitle.className = 'ai-action-title';
+    actionTitle.textContent = '✅ Action Detection';
+
+    actionSection.appendChild(actionTitle);
+
+    const actionRequired = document.createElement('div');
+
+    actionRequired.className = 'ai-action-row';
+
+    actionRequired.innerHTML = `
+    <strong>Action Required:</strong>
+    ${analysis.actionRequired ? 'Yes' : 'No'}
+`;
+
+    actionSection.appendChild(actionRequired);
+
+    if (analysis.actionRequired) {
+
+        const actionText = document.createElement('div');
+
+        actionText.className = 'ai-action-row';
+
+        actionText.innerHTML = `
+        <strong>Action:</strong>
+        ${analysis.action || 'None'}
+    `;
+
+        actionSection.appendChild(actionText);
+
+        const actionStatus = document.createElement('div');
+
+        actionStatus.className = 'ai-action-row';
+
+        actionStatus.innerHTML = `
+        <strong>Status:</strong>
+        ${analysis.actionStatus || 'NONE'}
+    `;
+
+        actionSection.appendChild(actionStatus);
+    }
+
+    card.appendChild(actionSection);
+
+// Deadline Detection
+    if (analysis.deadlineDetected) {
+
+        const deadlineSection = document.createElement('div');
+
+        deadlineSection.className = 'ai-deadline-section';
+
+        const deadlineTitle = document.createElement('div');
+
+        deadlineTitle.className = 'ai-deadline-title';
+        deadlineTitle.textContent = '📅 Deadline Detection';
+
+        deadlineSection.appendChild(deadlineTitle);
+
+        const deadlineDate = document.createElement('div');
+
+        deadlineDate.className = 'ai-deadline-row';
+
+        deadlineDate.innerHTML = `
+        <strong>Deadline:</strong>
+        ${analysis.deadline || 'Not specified'}
+    `;
+
+        deadlineSection.appendChild(deadlineDate);
+
+        const deadlineDescription = document.createElement('div');
+
+        deadlineDescription.className = 'ai-deadline-row';
+
+        deadlineDescription.innerHTML = `
+        <strong>For:</strong>
+        ${analysis.deadlineDescription || 'Not specified'}
+    `;
+
+        deadlineSection.appendChild(deadlineDescription);
+
+        card.appendChild(deadlineSection);
+
+        const reminderButton = document.createElement('button');
+
+        reminderButton.className = 'ai-reminder-button';
+        reminderButton.textContent = '🔔 Remind me';
+
+        reminderButton.addEventListener('click', () => {
+            console.log('Reminder button clicked');
+        });
+
+        card.appendChild(reminderButton);
+    }
+// Add the fully constructed panel to Gmail.
+    document.body.appendChild(card);
 }
 
 // ============================================================
@@ -959,6 +1104,7 @@ function setupSendButtonCleanup() {
 
                     removeEmailAnalysis();
                     removeAiToneMenu();
+                    lastGeneratedReply = '';
 
                 }, 500);
 
@@ -999,6 +1145,7 @@ function setupNavigationCleanup() {
 
             removeEmailAnalysis();
             removeAiToneMenu();
+            lastGeneratedReply = '';
 
         }
 
